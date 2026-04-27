@@ -1,0 +1,621 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+
+
+local Window = Rayfield:CreateWindow({
+
+   Name = " สคริปเล่นเพลงV3",
+
+   LoadingTitle = "พัฒนาโดย RISS",
+
+   LoadingSubtitle = "by RISS",
+
+   ConfigurationSaving = {
+
+      Enabled = true,
+
+      FolderName = "GeminiHubConfigs",
+
+      FileName = "VehicleMusic"
+
+   }
+
+})
+
+
+
+local MainTab = Window:CreateTab("Main Functions", 4483362458)
+
+
+
+-- Global Variables
+
+local musicID = ""
+
+local rainbowActive = false
+
+local rainbowSpeed = 5
+
+
+
+--- [ Function: หยุดเพลงและลบรถ (สำหรับรถเดิม) ] ---
+
+local function cleanUpVehicle()
+
+    local args = {"Delete NoMotorVehicle"}
+
+    pcall(function()
+
+        game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("1NoMoto1rVehicle1s"):FireServer(unpack(args))
+
+    end)
+
+    local stopArgs = {"PickingScooterMusicText", "", [4] = false}
+
+    pcall(function()
+
+        game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("1NoMoto1rVehicle1s"):FireServer(unpack(stopArgs))
+
+    end)
+
+end
+
+
+
+--- [ Function: สร้างหน้าต่างคุมเพลงสำหรับ Boombox (ใหม่) ] ---
+
+function createBoomboxControl()
+
+    if game.CoreGui:FindFirstChild("BoomboxGui") then
+
+        game.CoreGui.BoomboxGui:Destroy()
+
+    end
+
+
+
+    local MusicGui = Instance.new("ScreenGui")
+
+    local MiniFrame = Instance.new("Frame")
+
+    local Title = Instance.new("TextLabel")
+
+    local IDInput = Instance.new("TextBox")
+
+    local ToggleBtn = Instance.new("TextButton")
+
+    local CloseBtn = Instance.new("TextButton")
+
+    local UICorner = Instance.new("UICorner")
+
+    
+
+    local isPlaying = false
+
+
+
+    MusicGui.Parent = game.CoreGui
+
+    MusicGui.Name = "BoomboxGui"
+
+
+
+    MiniFrame.Parent = MusicGui
+
+    MiniFrame.BackgroundColor3 = Color3.fromRGB(45, 30, 60) -- สีต่างกันนิดหน่อยจะได้ไม่สับสน
+
+    MiniFrame.Position = UDim2.new(0.8, 0, 0.5, 0)
+
+    MiniFrame.Size = UDim2.new(0, 180, 0, 130)
+
+    MiniFrame.Active = true
+
+    MiniFrame.Draggable = true
+
+    UICorner.Parent = MiniFrame
+
+
+
+    Title.Parent = MiniFrame
+
+    Title.Text = "📻 Boombox Control"
+
+    Title.Size = UDim2.new(1, 0, 0, 30)
+
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+    Title.BackgroundTransparency = 1
+
+    Title.Font = Enum.Font.GothamBold
+
+
+
+    IDInput.Parent = MiniFrame
+
+    IDInput.Position = UDim2.new(0.1, 0, 0.3, 0)
+
+    IDInput.Size = UDim2.new(0.8, 0, 0, 30)
+
+    IDInput.PlaceholderText = "ใส่ ID เพลง"
+
+    IDInput.Text = ""
+
+    IDInput.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+    IDInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+
+
+    ToggleBtn.Parent = MiniFrame
+
+    ToggleBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
+
+    ToggleBtn.Size = UDim2.new(0.8, 0, 0, 30)
+
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+
+    ToggleBtn.Text = "เริ่มเล่น (OFF)"
+
+    ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+
+
+    ToggleBtn.MouseButton1Click:Connect(function()
+
+        isPlaying = not isPlaying
+
+        if isPlaying then
+
+            ToggleBtn.Text = "กำลังเล่น (ON)"
+
+            ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+
+            -- ใช้ Remote ตามที่คุณให้มาเป๊ะๆ
+
+            local args = {"ToolMusicText", IDInput.Text, [4] = true}
+
+            game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("PlayerToolEvent"):FireServer(unpack(args))
+
+        else
+
+            ToggleBtn.Text = "หยุดเพลง (OFF)"
+
+            ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+
+            local args = {"ToolMusicText", "", [4] = false}
+
+            game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("PlayerToolEvent"):FireServer(unpack(args))
+
+        end
+
+    end)
+
+
+
+    CloseBtn.Parent = MiniFrame
+
+    CloseBtn.Position = UDim2.new(1, -25, 0, 5)
+
+    CloseBtn.Size = UDim2.new(0, 20, 0, 20)
+
+    CloseBtn.Text = "X"
+
+    CloseBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+
+    CloseBtn.BackgroundTransparency = 1
+
+    CloseBtn.MouseButton1Click:Connect(function() 
+
+        -- หยุดทุกอย่างเมื่อกดปิด
+
+        local stopArgs = {"ToolMusicText", "", [4] = false}
+
+        game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("PlayerToolEvent"):FireServer(unpack(stopArgs))
+
+        MusicGui:Destroy() 
+
+    end)
+
+end
+
+
+
+--- [ Function: สร้างหน้าต่างคุมเพลง (สำหรับรถเดิม) ] ---
+
+function createMusicControl(titleText)
+
+    if game.CoreGui:FindFirstChild("MiniMusicGui") then
+
+        game.CoreGui.MiniMusicGui:Destroy()
+
+    end
+
+    -- (เหมือนเดิมกับโค้ดเก่าของคุณ)
+
+    local MusicGui = Instance.new("ScreenGui")
+
+    local MiniFrame = Instance.new("Frame")
+
+    local Title = Instance.new("TextLabel")
+
+    local IDInput = Instance.new("TextBox")
+
+    local ToggleBtn = Instance.new("TextButton")
+
+    local CloseBtn = Instance.new("TextButton")
+
+    local UICorner = Instance.new("UICorner")
+
+    local isPlaying = false
+
+    MusicGui.Parent = game.CoreGui
+
+    MusicGui.Name = "MiniMusicGui"
+
+    MiniFrame.Parent = MusicGui
+
+    MiniFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+
+    MiniFrame.Position = UDim2.new(0.8, 0, 0.7, 0)
+
+    MiniFrame.Size = UDim2.new(0, 180, 0, 130)
+
+    MiniFrame.Active = true
+
+    MiniFrame.Draggable = true
+
+    UICorner.Parent = MiniFrame
+
+    Title.Parent = MiniFrame
+
+    Title.Text = "🎵 " .. titleText
+
+    Title.Size = UDim2.new(1, 0, 0, 30)
+
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+    Title.BackgroundTransparency = 1
+
+    Title.Font = Enum.Font.GothamBold
+
+    IDInput.Parent = MiniFrame
+
+    IDInput.Position = UDim2.new(0.1, 0, 0.3, 0)
+
+    IDInput.Size = UDim2.new(0.8, 0, 0, 30)
+
+    IDInput.PlaceholderText = "ใส่ ID เพลง"
+
+    IDInput.Text = musicID
+
+    IDInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+
+    IDInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+    IDInput.FocusLost:Connect(function() musicID = IDInput.Text end)
+
+    ToggleBtn.Parent = MiniFrame
+
+    ToggleBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
+
+    ToggleBtn.Size = UDim2.new(0.8, 0, 0, 30)
+
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+
+    ToggleBtn.Text = "หยุดเพลง (OFF)"
+
+    ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+    ToggleBtn.MouseButton1Click:Connect(function()
+
+        isPlaying = not isPlaying
+
+        if isPlaying then
+
+            ToggleBtn.Text = "เล่นเพลง (ON)"
+
+            ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+
+            local args = {"PickingScooterMusicText", musicID, [4] = true}
+
+            game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("1NoMoto1rVehicle1s"):FireServer(unpack(args))
+
+        else
+
+            ToggleBtn.Text = "หยุดเพลง (OFF)"
+
+            ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+
+            local args = {"PickingScooterMusicText", "", [4] = false}
+
+            game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("1NoMoto1rVehicle1s"):FireServer(unpack(args))
+
+        end
+
+    end)
+
+    CloseBtn.Parent = MiniFrame
+
+    CloseBtn.Position = UDim2.new(1, -25, 0, 5)
+
+    CloseBtn.Size = UDim2.new(0, 20, 0, 20)
+
+    CloseBtn.Text = "X"
+
+    CloseBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+
+    CloseBtn.BackgroundTransparency = 1
+
+    CloseBtn.MouseButton1Click:Connect(function() cleanUpVehicle() MusicGui:Destroy() end)
+
+end
+
+
+
+--- [ Section: Main Spawner ] ---
+
+MainTab:CreateSection("🚲 เมนูเลือกพาหนะ & อุปกรณ์")
+
+
+
+MainTab:CreateButton({
+
+   Name = "🔲 เปิดเมนูเลือกของ (Vehicle & Boombox)",
+
+   Callback = function()
+
+      if game.CoreGui:FindFirstChild("VehicleSelector") then return end
+
+
+
+      local ScreenGui = Instance.new("ScreenGui")
+
+      local Frame = Instance.new("Frame")
+
+      local Title = Instance.new("TextLabel")
+
+      local ScooterBtn = Instance.new("TextButton")
+
+      local SkateboardBtn = Instance.new("TextButton")
+
+      local BoomboxBtn = Instance.new("TextButton")
+
+      local CloseBtn = Instance.new("TextButton")
+
+      local UICorner = Instance.new("UICorner")
+
+
+
+      ScreenGui.Parent = game.CoreGui
+
+      ScreenGui.Name = "VehicleSelector"
+
+
+
+      Frame.Parent = ScreenGui
+
+      Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+      Frame.Position = UDim2.new(0.5, -225, 0.5, -100) -- ขยายกว้างขึ้นนิดหน่อย
+
+      Frame.Size = UDim2.new(0, 450, 0, 200)
+
+      Frame.Active = true
+
+      Frame.Draggable = true
+
+      UICorner.Parent = Frame
+
+
+
+      Title.Parent = Frame
+
+      Title.Text = "SELECT YOUR ITEM"
+
+      Title.Size = UDim2.new(1, 0, 0, 50)
+
+      Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+      Title.Font = Enum.Font.GothamBold
+
+      Title.TextSize = 20
+
+      Title.BackgroundTransparency = 1
+
+
+
+      -- ปุ่ม Scooter
+
+      ScooterBtn.Parent = Frame
+
+      ScooterBtn.Position = UDim2.new(0.05, 0, 0.35, 0)
+
+      ScooterBtn.Size = UDim2.new(0, 120, 0, 100)
+
+      ScooterBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+
+      ScooterBtn.Text = "🛴\nScooter"
+
+      ScooterBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+      ScooterBtn.TextSize = 18
+
+      local c1 = Instance.new("UICorner") c1.Parent = ScooterBtn
+
+      ScooterBtn.MouseButton1Click:Connect(function()
+
+         cleanUpVehicle()
+
+         game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("1NoMoto1rVehicle1s"):FireServer("SegwaySmall")
+
+         createMusicControl("Scooter Control")
+
+         ScreenGui:Destroy()
+
+      end)
+
+
+
+      -- ปุ่ม Skateboard
+
+      SkateboardBtn.Parent = Frame
+
+      SkateboardBtn.Position = UDim2.new(0.36, 0, 0.35, 0)
+
+      SkateboardBtn.Size = UDim2.new(0, 120, 0, 100)
+
+      SkateboardBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+
+      SkateboardBtn.Text = "🛹\nSkateboard"
+
+      SkateboardBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+      SkateboardBtn.TextSize = 18
+
+      local c2 = Instance.new("UICorner") c2.Parent = SkateboardBtn
+
+      SkateboardBtn.MouseButton1Click:Connect(function()
+
+         cleanUpVehicle()
+
+         game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("1NoMoto1rVehicle1s"):FireServer("SkateBoard")
+
+         createMusicControl("Skateboard Control")
+
+         ScreenGui:Destroy()
+
+      end)
+
+
+
+      -- [ ปุ่ม Boombox - เพิ่มใหม่ ]
+
+      BoomboxBtn.Parent = Frame
+
+      BoomboxBtn.Position = UDim2.new(0.67, 0, 0.35, 0)
+
+      BoomboxBtn.Size = UDim2.new(0, 120, 0, 100)
+
+      BoomboxBtn.BackgroundColor3 = Color3.fromRGB(80, 50, 100)
+
+      BoomboxBtn.Text = "📻\nBoombox"
+
+      BoomboxBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+      BoomboxBtn.TextSize = 18
+
+      local c3 = Instance.new("UICorner") c3.Parent = BoomboxBtn
+
+      BoomboxBtn.MouseButton1Click:Connect(function()
+
+         -- โค้ดรับของที่คุณให้มา
+
+         local args = {"PickingTools", "Boombox"}
+
+         game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("1Too1l"):InvokeServer(unpack(args))
+
+         
+
+         -- เปิดหน้าต่างคุมเพลงแบบ Boombox
+
+         createBoomboxControl()
+
+         ScreenGui:Destroy()
+
+      end)
+
+
+
+      CloseBtn.Parent = Frame
+
+      CloseBtn.Position = UDim2.new(1, -35, 0, 10)
+
+      CloseBtn.Size = UDim2.new(0, 25, 0, 25)
+
+      CloseBtn.Text = "X"
+
+      CloseBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+
+      CloseBtn.BackgroundTransparency = 1
+
+      CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
+
+   end,
+
+})
+
+
+
+--- [ Section: Rainbow ] ---
+
+MainTab:CreateSection("🌈 ระบบสีรถ (RGB)")
+
+MainTab:CreateToggle({
+
+   Name = "เปิด/ปิด รถสีรุ้ง (Auto)",
+
+   CurrentValue = false,
+
+   Flag = "RainbowToggle",
+
+   Callback = function(Value)
+
+      rainbowActive = Value
+
+      task.spawn(function()
+
+         while rainbowActive do
+
+            local hue = (tick() * (rainbowSpeed / 10)) % 1
+
+            local color = Color3.fromHSV(hue, 1, 1)
+
+            pcall(function()
+
+               game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("1Player1sCa1r"):FireServer("NoMotorColor", color)
+
+            end)
+
+            task.wait(0.1)
+
+         end
+
+      end)
+
+   end,
+
+})
+
+
+
+MainTab:CreateSlider({
+
+   Name = "ปรับความเร็วสีรุ้ง",
+
+   Range = {1, 20},
+
+   Increment = 1,
+
+   Suffix = "Speed",
+
+   CurrentValue = 5,
+
+   Flag = "RGBSpeed",
+
+   Callback = function(Value) rainbowSpeed = Value end,
+
+})
+
+
+
+Rayfield:Notify({
+
+   Title = "พัฒนาโดยRISS คนช่วยพัฒนา JOHN",
+
+   Content = "เข้าสู่ระบบ script เปิดเพลง v3 เรียบร้อยแล้ว",
+
+   Duration = 5,
+
+   Image = 4483362458,
+
+})
